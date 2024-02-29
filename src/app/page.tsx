@@ -1,4 +1,5 @@
 "use client";
+import Sidebar from "@/components/sidebar";
 import React, { useCallback, useEffect, useState } from "react";
 import ReactFlow, {
   addEdge,
@@ -6,10 +7,10 @@ import ReactFlow, {
   Background,
   useNodesState,
   useEdgesState,
+  Connection,
+  OnConnect,
 } from "reactflow";
 import "reactflow/dist/style.css";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 
 const Home: React.FC = () => {
   const [initialNodes, setInitialNodes] = useState([]);
@@ -18,8 +19,12 @@ const Home: React.FC = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [inputText, setInputText] = useState<string>("");
 
-  const onConnect = useCallback(
-    (params) => setEdges((eds) => addEdge(params, eds)),
+  const onConnect: OnConnect = useCallback(
+    (params: Connection) => {
+      if (params.source && params.target) {
+        setEdges((eds) => addEdge(params, eds));
+      }
+    },
     [setEdges]
   );
 
@@ -44,40 +49,11 @@ const Home: React.FC = () => {
 
   return (
     <div className="flex flex-row w-screen h-screen">
-      <div className="bg-[#1D1D21] w-[40vw]">
-        <div className="p-4 border-b-2">
-          <img src="/opaio.png" width={"120px"} alt="Logo" />
-        </div>
-        <div className="flex flex-col p-4 space-y-4">
-          <div className="flex flex-col space-y-2">
-            <h1 className="text-[#F2F2F3] font-semibold">Text to Diagram</h1>
-            <p className="text-[#D0D0D0] text-sm">
-              Leverage AI algorithms for text interpretation and structuring,
-              followed by the use of AI-driven diagram tools to craft a visually
-              cohesive flow chart, guaranteeing precision in representing the
-              expanded prompt
-            </p>
-            <p className="text-[#D0D0D0] text-sm">
-              • Type a detailed prompt of the flow diagram you want to generate
-            </p>
-            <p className="text-[#D0D0D0] text-sm">
-              • Wait a few seconds for the diagram to generate
-            </p>
-            <p className="text-[#D0D0D0] text-sm">
-              • You can keep on modifying the generated diagram
-            </p>
-          </div>
-          <div className="flex flex-col space-y-2">
-            <p className="text-[#F2F2F3] font-semibold">Prompt</p>
-            <Textarea
-              className="bg-[#2C2C30] h-[300px]"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-            />
-            <Button onClick={onGenerateClick}>Generate</Button>
-          </div>
-        </div>
-      </div>
+      <Sidebar
+        inputText={inputText}
+        onInputChange={setInputText}
+        onGenerateClick={onGenerateClick}
+      />
 
       <div style={{ width: "100vw", height: "100vh" }} className="bg-[#0E0E12]">
         <ReactFlow
@@ -88,7 +64,6 @@ const Home: React.FC = () => {
           onConnect={onConnect}
         >
           <Controls />
-          <Background variant="dots" gap={50} size={1} />
         </ReactFlow>
       </div>
     </div>
