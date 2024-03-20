@@ -1,39 +1,24 @@
 "use client";
 import React, { useState } from "react";
-import {
-  Chart as ChartJS,
-  RadialLinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-  Tooltip,
-  Legend,
-} from "chart.js";
 import { Radar } from "react-chartjs-2";
+import ChartJS, { Chart, PluginOptionsByType } from "chart.js/auto";
 import Sidebar from "@/components/sidebar";
-
-ChartJS.register(
-  RadialLinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-  Tooltip,
-  Legend
-);
 
 const plugin = {
   id: "customCanvasBackgroundColor",
-  beforeDraw: (chart, args, options) => {
+  beforeDraw: (chart: Chart, args: unknown, options: any) => {
     const { ctx } = chart;
     ctx.save();
     ctx.globalCompositeOperation = "destination-over";
-    ctx.fillStyle = options.color || "#99ffff";
+    ctx.fillStyle = options.color || "#2C2C30";
     ctx.fillRect(0, 0, chart.width, chart.height);
     ctx.restore();
   },
 };
 
-const dataT = {
+ChartJS.register(plugin);
+
+const defaultData = {
   labels: [
     "Taste",
     "Quality",
@@ -53,16 +38,43 @@ const dataT = {
   ],
 };
 
+// Default options object with the defined type
+const defaultOptions = {};
+
 const RadarChart: React.FC = () => {
   const [inputText, setInputText] = useState("");
-  const [data, setData] = useState(dataT);
+  const [data, setData] = useState(defaultData);
+  const [options, setOptions] = useState(defaultOptions);
 
   const onGenerateClick = () => {
-    const chart = JSON.parse(inputText);
-    setData(chart);
-  };
+    const dataRegex = /const\s+data\s*=\s*({[^;]+})/;
+    const optionsRegex = /const\s+options\s*=\s*({[^;]+})/;
 
-  console.log(data);
+    const dataMatch = dataRegex.exec(inputText);
+    const optionsMatch = optionsRegex.exec(inputText);
+
+    let parsedData = defaultData;
+    let parsedOptions = defaultOptions;
+
+    if (dataMatch) {
+      try {
+        parsedData = eval("(" + dataMatch[1] + ")");
+      } catch (error) {
+        console.error("Error parsing data:", error);
+      }
+    }
+
+    if (optionsMatch) {
+      try {
+        parsedOptions = eval("(" + optionsMatch[1] + ")");
+      } catch (error) {
+        console.error("Error parsing options:", error);
+      }
+    }
+
+    setData(parsedData);
+    setOptions(parsedOptions);
+  };
 
   return (
     <div className="flex flex-row w-screen h-screen">
@@ -82,7 +94,7 @@ const RadarChart: React.FC = () => {
         }}
         className="bg-[#2C2C30] w-full px-2 py-4"
       >
-        <Radar data={data} />
+        <Radar data={data} options={options} />
       </div>
     </div>
   );
